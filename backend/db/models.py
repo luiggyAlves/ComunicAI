@@ -23,7 +23,7 @@ class Exercise(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field(max_length=150)
     mode: ExerciseMode = Field(index=True)
-    position = int 
+    position: int 
     scenario: str
     persona: str
     objetctive: str
@@ -40,5 +40,27 @@ class Encouragement(SQLModel, table=True):
     text: str = Field(max_length=300)
     active: bool = Field(default=True)
 
+class SessionStatus(str, Enum):
+    IN_PROGRESS = "em_andamento"
+    COMPLETED = "concluido"
 
+class ExerciseSession(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    exercise_id: int = Field(foreign_key="exercise.id", index=True)
+    status: SessionStatus = Field(default=SessionStatus.IN_PROGRESS)
+    current_question: int = Field(default=1)
+    current_attempt: int = Field(default=1)
+    started_at: datetime = Field(default_factory = utc_now)
+    finished_at: datetime | None = None
 
+class MessageRole(str, Enum):
+    PERSONA = "persona"
+    USER = "usuario"
+
+class Message(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(foreign_key="exercisesession.id", index=True)
+    role: MessageRole
+    content: str
+    created_at: datetime = Field(default_factory=utc_now)
