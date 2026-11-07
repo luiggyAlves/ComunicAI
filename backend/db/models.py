@@ -3,6 +3,7 @@
 from datetime import datetime, timezone # usado pra log
 from sqlmodel import Field, SQLModel
 from enum import Enum
+from sqlalchemy import JSON, Column
 
 def utc_now():
     return datetime.now(timezone.utc)
@@ -63,4 +64,32 @@ class Message(SQLModel, table=True):
     session_id: int = Field(foreign_key="exercisesession.id", index=True)
     role: MessageRole
     content: str
+    created_at: datetime = Field(default_factory=utc_now)
+
+# As tabelas anteriores guardavam as perguntas de cada exercício, dados do usuario etc. Agora as tabelas abaixo irão guardar as avaliações, o mais importante.
+
+class Attempt(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(foreign_key="exercisesession.id", index=True)
+    question_id: int = Field(foreign_key="question.id")
+    attempt_number : int 
+    answer: str
+    scores: dict = Field(sa_column=Column(JSON))
+    overall_score: float
+    strengths: str 
+    improvements: str 
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class QuestionOutcome(str, Enum):
+    PASSED_FIRST = "aprovado_na_primeira"
+    IMPROVED = "melhorou"
+    NOT_IMPROVED = "nao_melhorou"
+
+class QuestionResult(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(foreign_key = "exercisesession.id", index=True)
+    question_id: int = Field(foreign_key="question.id")
+    outcome: QuestionOutcome
+    encouragement_id: int | None = Field(default=None, foreign_key="encouragement.id")
     created_at: datetime = Field(default_factory=utc_now)
